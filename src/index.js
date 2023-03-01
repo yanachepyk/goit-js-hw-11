@@ -1,5 +1,6 @@
 import './css/styles.css';
 import { Notify } from 'notiflix';
+import axios from 'axios';
 
 const input = document.querySelector('.search-input');
 const searchBtn = document.querySelector('.search-btn');
@@ -9,11 +10,13 @@ const API_KEY = '34035283-4d31da2bf260205eb23ca149e';
 let page = 1;
 let storedValue = null;
 
-function fetcImages(searchText) {
-  return fetch(
-    `https://pixabay.com/api/?key=${API_KEY}&q=${searchText}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${page}
-      `
-  );
+async function fetcImages(searchText) {
+    const response = await axios.get(
+        `https://pixabay.com/api/?key=${API_KEY}&q=${searchText}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${page}
+          `
+      );
+
+  return response.data; 
 }
 
 searchBtn.addEventListener('click', async event => {
@@ -25,8 +28,7 @@ searchBtn.addEventListener('click', async event => {
 
   loadMoreBtn.classList.add('is-hidden');
 
-  const rowResponse = await fetcImages(input.value);
-  const response = await rowResponse.json();
+  const response = await fetcImages(input.value);
 
   Notify.info(`Hooray! We found ${response.totalHits} images.`);
 
@@ -65,8 +67,7 @@ loadMoreBtn.addEventListener('click', async () => {
   page += 1;
 
   try {
-    const rowResponse = await fetcImages(input.value);
-    const response = await rowResponse.json();
+    const response = await fetcImages(input.value);
 
     const galleryElements = response?.hits.map(
       image =>

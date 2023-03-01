@@ -13,10 +13,10 @@ function fetcImages(searchText) {
   return fetch(
     `https://pixabay.com/api/?key=${API_KEY}&q=${searchText}&image_type=photo&orientation=horizontal&safesearch=true&per_page=40&page=${page}
       `
-  ).then(response => response.json());
+  );
 }
 
-searchBtn.addEventListener('click', event => {
+searchBtn.addEventListener('click', async event => {
   event.preventDefault();
   if (storedValue !== input.value) {
     page = 1;
@@ -25,69 +25,75 @@ searchBtn.addEventListener('click', event => {
 
   loadMoreBtn.classList.add('is-hidden');
 
-  fetcImages(input.value)
-    .then(response => {
-      Notify.info(`Hooray! We found ${response.totalHits} images.`);
-      if (response.hits.length === 0) {
-        Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-      } else {
-        const galleryElements = response.hits.map(
-          image => `<div class="photo-card">
-                <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" width="300" />
-            <div class="info">
-              <p class="info-item">
-                <b>Likes: ${image.likes}</b>
-              </p>
-              <p class="info-item">
-                <b>Views: ${image.views}</b>
-              </p>
-              <p class="info-item">
-                <b>Comments: ${image.comments}</b>
-              </p>
-              <p class="info-item">
-                <b>Downloads: ${image.downloads}</b>
-              </p>
-            </div>
-          </div>`
-        );
+  const rowResponse = await fetcImages(input.value);
+  const response = await rowResponse.json();
 
-        gallery.innerHTML = galleryElements.join('');
-      }
-    })
-    .then(() => loadMoreBtn.classList.remove('is-hidden'));
-});
-loadMoreBtn.addEventListener('click', () => {
-  page += 1;
+  Notify.info(`Hooray! We found ${response.totalHits} images.`);
 
-  fetcImages(input.value).then(response => {
+  if (response.hits.length === 0) {
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+  } else {
     const galleryElements = response.hits.map(
       image => `<div class="photo-card">
+            <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" width="300" />
+        <div class="info">
+          <p class="info-item">
+            <b>Likes: ${image.likes}</b>
+          </p>
+          <p class="info-item">
+            <b>Views: ${image.views}</b>
+          </p>
+          <p class="info-item">
+            <b>Comments: ${image.comments}</b>
+          </p>
+          <p class="info-item">
+            <b>Downloads: ${image.downloads}</b>
+          </p>
+        </div>
+      </div>`
+    );
+
+    gallery.innerHTML = galleryElements.join('');
+  }
+
+  loadMoreBtn.classList.remove('is-hidden');
+});
+
+loadMoreBtn.addEventListener('click', async () => {
+  page += 1;
+
+  try {
+    const rowResponse = await fetcImages(input.value);
+    const response = await rowResponse.json();
+
+    const galleryElements = response?.hits.map(
+      image =>
+        `<div class="photo-card">
             <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" width="300"/>
             <div class="info">
-              <p class="info-item">
+                <p class="info-item">
                 <b>Likes: ${image.likes}</b>
-              </p>
-              <p class="info-item">
+                </p>
+                <p class="info-item">
                 <b>Views: ${image.views}</b>
-              </p>
-              <p class="info-item">
+                </p>
+                <p class="info-item">
                 <b>Comments: ${image.comments}</b>
-              </p>
-              <p class="info-item">
+                </p>
+                <p class="info-item">
                 <b>Downloads: ${image.downloads}</b>
-              </p>
+                </p>
             </div>
-          </div>`
+            </div>`
     );
     gallery.insertAdjacentHTML('beforeend', galleryElements);
-
     if (gallery.children.length === response.totalHits) {
       loadMoreBtn.classList.add('is-hidden');
       Notify.warning(
         "We're sorry, but you've reached the end of search results."
       );
     }
-  });
+  } catch {}
 });
